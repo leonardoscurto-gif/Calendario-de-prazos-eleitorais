@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Despacho — PAJ Criminal Eleitoral (DPU)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #1F3864;
+    --navy-deep: #142544;
+    --bg: #EDF1F6;
+    --panel: #FFFFFF;
+    --line: #D8DFEA;
+    --ink: #1B2430;
+    --ink-soft: #5B6779;
+    --amber: #B45309;
+    --amber-bg: #FBF0E1;
+    --green: #2F6F4E;
+    --green-bg: #E9F3EC;
+    --red: #A32020;
+    --red-bg: #FBEAEA;
+    --purple: #5B3FA6;
+    --purple-bg: #F3F0FF;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:32px 16px 60px;}
+  .wrap{max-width:820px;margin:0 auto;}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);font-weight:600;margin-bottom:8px;}
+  h1{font-family:var(--serif);font-size:32px;font-weight:700;color:var(--navy-deep);margin:0 0 6px;line-height:1.15;}
+  .subtitle{color:var(--ink-soft);font-size:15px;margin:0 0 26px;max-width:60ch;}
+  .banner{background:var(--red-bg);border:1px solid #E3B3B3;border-left:4px solid var(--red);border-radius:6px;padding:14px 16px;margin-bottom:26px;font-size:13.5px;line-height:1.55;color:#7A2020;}
+  .banner strong{color:#5E1717;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:24px 26px;margin-bottom:18px;}
+  .card h2{font-family:var(--serif);font-size:17px;margin:0 0 16px;color:var(--navy-deep);font-weight:600;}
+  .card h2 .n{font-family:var(--mono);color:var(--ink-soft);font-size:13px;margin-right:6px;}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:5px;line-height:1.45;}
+  input[type="text"],input[type="date"],input[type="number"],select,textarea{
+    width:100%;font-family:var(--mono);font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#FBFCFE;color:var(--ink);
+  }
+  textarea{font-family:var(--sans);line-height:1.5;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--navy);outline-offset:1px;border-color:var(--navy);}
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+  .row > div{flex:1;min-width:180px;}
+  .row:last-child{margin-bottom:0;}
+  .checkbox-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+  .checkbox-row input{width:auto;margin-top:3px;}
+  .checkbox-row .ctext{font-size:13.5px;color:var(--ink);}
+  .checkbox-row .ctext b{display:block;}
+  .checkbox-row .ctext span{color:var(--ink-soft);font-size:12px;}
+
+  .evt-list{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .evt-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;background:#FBFCFE;}
+  .evt-item:last-child{border-bottom:none;}
+  .evt-item .tag{font-family:var(--mono);font-size:11px;background:var(--purple-bg);color:var(--purple);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+  .evt-item .dt{font-family:var(--mono);color:var(--ink-soft);}
+  .evt-item .rm{margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;font-weight:600;}
+  .evt-empty{padding:14px;text-align:center;color:var(--ink-soft);font-size:12.5px;}
+
+  .add-evt{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+  .add-evt > div{flex:1;min-width:160px;}
+  .btn{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:10px 16px;font-family:var(--sans);font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;}
+  .btn:hover{background:var(--navy-deep);}
+  .btn.secondary{background:#fff;color:var(--navy);border:1px solid var(--navy);}
+  .btn.big{width:100%;padding:14px;font-size:14.5px;margin-top:6px;}
+  .btn.purple{background:var(--purple);}
+  .btn.purple:hover{background:#472F87;}
+
+  .calc-result{display:none;margin-top:18px;}
+  .calc-result.show{display:block;animation:reveal .3s ease;}
+  @keyframes reveal{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .prazo-box{display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+  .prazo-box .box{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .prazo-box .box .lbl{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px;}
+  .prazo-box .box .val{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--navy-deep);}
+
+  .timeline-check{border-radius:8px;padding:14px 16px;margin-bottom:8px;font-size:13px;border:1px solid;}
+  .timeline-check.ok{background:var(--green-bg);border-color:#BFDCC9;color:#1E4A32;}
+  .timeline-check.bad{background:var(--red-bg);border-color:#E3B3B3;color:#5E1717;}
+  .timeline-check .tt{font-weight:600;margin-bottom:3px;}
+
+  textarea.gen-text{width:100%;min-height:420px;font-family:var(--mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;}
+
+  footer{margin-top:26px;font-size:12px;color:var(--ink-soft);line-height:1.6;text-align:center;}
+
+  /* ---- Análise de documento por IA ---- */
+  .ai-card{background:var(--purple-bg);border:1px solid #D6CCF2;border-left:4px solid var(--purple);}
+  .ai-card h2{color:#3E2A78;}
+  .segmented{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+  .segmented button{flex:1;border:none;background:#FBFCFE;padding:10px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-soft);cursor:pointer;}
+  .segmented button + button{border-left:1px solid var(--line);}
+  .segmented button.active{background:var(--purple);color:#fff;}
+  .filedrop{border:2px dashed #C7B8EA;border-radius:8px;padding:24px;text-align:center;background:#FBFAFF;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .filedrop.has-file{border-color:var(--purple);color:var(--ink);background:#F3F0FF;}
+  .spinner{display:none;align-items:center;gap:8px;font-size:13px;color:var(--purple);margin-top:10px;}
+  .spinner.show{display:flex;}
+  .spinner .dot{width:8px;height:8px;border-radius:50%;background:var(--purple);animation:pulse 1s infinite ease-in-out;}
+  .spinner .dot:nth-child(2){animation-delay:.15s;}
+  .spinner .dot:nth-child(3){animation-delay:.3s;}
+  @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+  .review-panel{display:none;margin-top:16px;border-top:1px solid #D6CCF2;padding-top:16px;}
+  .review-panel.show{display:block;}
+  .review-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #E4DEF7;}
+  .review-item:last-child{border-bottom:none;}
+  .review-item input[type="checkbox"]{margin-top:11px;}
+  .review-item .rlabel{font-size:11px;font-family:var(--mono);color:#5B3FA6;text-transform:uppercase;margin-bottom:4px;}
+  .review-item .rfield{flex:1;}
+  .review-item input[type="text"],.review-item input[type="date"],.review-item input[type="number"]{background:#fff;}
+
+  .posicao-box{background:#fff;border:1px solid #D6CCF2;border-radius:8px;padding:14px 16px;margin-top:12px;}
+  .posicao-box .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;margin-bottom:8px;}
+  .posicao-box .tag.favoravel{background:var(--green-bg);color:var(--green);}
+  .posicao-box .tag.desfavoravel{background:var(--red-bg);color:var(--red);}
+  .posicao-box .tag.neutra,.posicao-box .tag.indefinida{background:#EDEDED;color:#555;}
+  .posicao-box p{font-size:13px;line-height:1.55;margin:0;color:var(--ink);}
+  .posicao-warn{font-size:11.5px;color:var(--amber);margin-top:8px;font-weight:500;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">DPU · NEIE · Divisão Criminal Eleitoral</div>
+  <h1>Gerador de Despacho de PAJ</h1>
+  <p class="subtitle">Monta o despacho a partir do padrão institucional, com cálculo automático de prescrição penal. Os itens de análise processual e diligências continuam sendo escritos por quem estiver com o caso.</p>
+
+  <div class="banner">
+    <strong>Prescrição penal é matéria de ordem pública.</strong> Este cálculo segue a tabela do art. 109 do Código Penal e as causas de redução (art. 115) e interrupção (art. 117), mas é uma ferramenta de apoio — não dispensa a conferência da conclusão por quem assina o despacho, especialmente em casos de concurso de crimes, causas de aumento/diminuição obrigatórias, ou marcos não previstos aqui (ex: suspensão do art. 116).
+  </div>
+
+  <div class="card ai-card">
+    <h2>Analisar documento automaticamente</h2>
+    <div class="segmented" id="inputModeToggle">
+      <button type="button" class="active" data-value="texto">Colar texto</button>
+      <button type="button" data-value="arquivo">Anexar arquivo (PDF/imagem)</button>
+    </div>
+
+    <div id="blocoTexto">
+      <textarea id="docTexto" rows="6" placeholder="Cole aqui o texto da decisão, denúncia ou relatório..."></textarea>
+    </div>
+    <div id="blocoArquivo" style="display:none;">
+      <div class="filedrop" id="filedrop" onclick="document.getElementById('fileInput').click()">
+        <span id="filedropLabel">Clique para escolher um arquivo (PDF, JPG, PNG)</span>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;" onchange="handleFileSelect(event)">
+    </div>
+
+    <button type="button" class="btn big purple" onclick="analisarDocumento()" style="margin-top:14px;">Analisar com IA</button>
+    <div class="spinner" id="spinner"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Lendo o documento...</div>
+
+    <div class="review-panel" id="reviewPanel">
+      <p class="hint" style="margin-bottom:10px;">Confira cada campo extraído. Desmarque o que não quiser aplicar, ou edite antes de aplicar.</p>
+      <div id="reviewFields"></div>
+      <div id="posicaoContainer"></div>
+      <button type="button" class="btn big" style="margin-top:14px;" onclick="aplicarCampos()">Aplicar campos selecionados</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1–2</span>Cabeçalho do PAJ</h2>
+    <div class="row">
+      <div>
+        <label for="resolucao">Resolução de regência</label>
+        <input type="text" id="resolucao" value="Resolução CSDPU nº 250, de 9 de junho de 2026">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="numProcesso">Número da Ação Penal Eleitoral</label>
+        <input type="text" id="numProcesso" placeholder="0600001-21.2023.6.20.0015">
+      </div>
+      <div>
+        <label for="zonaEleitoral">Zona Eleitoral</label>
+        <input type="text" id="zonaEleitoral" placeholder="15ª Zona Eleitoral de São José do Campestre/RN">
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="semCobertura" checked>
+      <div class="ctext">
+        <b>Localidade sem cobertura ordinária por Unidade/Núcleo Regional da DPU</b>
+        <span>Marcado por padrão — insere a cláusula de competência do NEIE. Desmarque se a atuação for de uma unidade ordinária.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>Imputação</h2>
+    <label for="crimeSelect">Selecionar crime comum (Código Eleitoral) — opcional, preenche os campos abaixo</label>
+    <select id="crimeSelect" onchange="aplicarCrimeSelecionado()">
+      <option value="">— Selecione ou digite manualmente abaixo —</option>
+    </select>
+    <div class="hint" style="margin-bottom:16px;">Lista com os crimes mais comuns do Código Eleitoral (Lei 4.737/65), com pena conferida na fonte. Para outros tipos penais (Código Penal, concurso de crimes, leis extravagantes), digite direto nos campos abaixo.</div>
+    <div class="row">
+      <div>
+        <label for="dispositivo">Dispositivo legal imputado</label>
+        <input type="text" id="dispositivo" placeholder="art. 299 da Lei nº 4.737/1965 (Código Eleitoral)">
+      </div>
+      <div>
+        <label for="penaMaxima">Pena máxima cominada (em anos — use decimais para meses, ex: 1.5 = 1 ano e 6 meses)</label>
+        <input type="number" id="penaMaxima" step="0.1" min="0" placeholder="4">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4–7</span>Marcos prescricionais</h2>
+
+    <div class="row">
+      <div>
+        <label for="dataFato">Data dos fatos</label>
+        <input type="date" id="dataFato">
+      </div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="menor21">
+      <div class="ctext"><b>Réu era menor de 21 anos ao tempo do fato</b><span>Art. 115, CP — reduz o prazo prescricional pela metade.</span></div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="maior70">
+      <div class="ctext"><b>Réu era maior de 70 anos na data da sentença</b><span>Art. 115, CP — também reduz pela metade (cumulativo com a de cima, se ambas incidirem).</span></div>
+    </div>
+
+    <label style="margin-top:6px;">Causas interruptivas ocorridas (art. 117, CP)</label>
+    <div class="evt-list" id="evtList">
+      <div class="evt-empty" id="evtEmpty">Nenhum evento adicionado ainda — adicione ao menos o recebimento da denúncia, se já tiver ocorrido.</div>
+    </div>
+    <div class="add-evt">
+      <div>
+        <label for="evtTipo">Tipo</label>
+        <select id="evtTipo">
+          <option value="denuncia">Recebimento da denúncia/queixa (I)</option>
+          <option value="pronuncia">Pronúncia (II)</option>
+          <option value="confirmatoria">Decisão confirmatória da pronúncia (III)</option>
+          <option value="sentenca">Publicação de sentença/acórdão condenatório recorrível (IV)</option>
+          <option value="cumprimento">Início/continuação do cumprimento da pena (V)</option>
+          <option value="reincidencia">Reincidência (VI)</option>
+        </select>
+      </div>
+      <div>
+        <label for="evtData">Data</label>
+        <input type="date" id="evtData">
+      </div>
+      <button type="button" class="btn secondary" onclick="adicionarEvento()">+ Adicionar evento</button>
+    </div>
+
+    <button type="button" class="btn big" onclick="calcularPrescricao()">Calcular prescrição</button>
+
+    <div class="calc-result" id="prescResult">
+      <div class="prazo-box">
+        <div class="box"><div class="lbl">Prazo base (art. 109)</div><div class="val" id="prazoBaseVal">—</div></div>
+        <div class="box"><div class="lbl">Redução aplicada?</div><div class="val" id="reducaoVal" style="font-size:16px;">—</div></div>
+        <div class="box"><div class="lbl">Prazo final</div><div class="val" id="prazoFinalVal">—</div></div>
+      </div>
+      <div id="timelineChecks"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">8+</span>Análise processual</h2>
+    <label for="analiseProcessual">Escreva livremente — cada parágrafo (separado por linha em branco) vira um item numerado no despacho final.</label>
+    <textarea id="analiseProcessual" rows="6" placeholder="Certifico que a denúncia foi regularmente recebida em [data], tendo a parte assistida sido regularmente citada..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Diligências cartorárias</h2>
+    <div class="checkbox-row">
+      <input type="checkbox" id="dilAssistido" checked>
+      <div class="ctext"><b>Contatar a parte assistida</b><span>Cientificá-la de que a DPU assumiu sua defesa perante a Justiça Eleitoral (cláusula NEIE, se aplicável).</span></div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="dilTestemunhas" checked>
+      <div class="ctext"><b>Indagar sobre testemunhas</b><span>Nome completo, telefone, endereço e demais dados de qualificação.</span></div>
+    </div>
+    <label for="dilExtra" style="margin-top:8px;">Diligências adicionais (uma por linha)</label>
+    <textarea id="dilExtra" rows="3" placeholder="Ex: solicitar cópia integral do inquérito policial..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Diligências da assessoria jurídica</h2>
+    <label for="dilAssessoria">Uma por linha — cada linha vira um item numerado.</label>
+    <textarea id="dilAssessoria" rows="4" placeholder="Proceder à análise da Resposta à Acusação (ID ...), verificando a necessidade de complementação, ratificação ou aditamento..."></textarea>
+  </div>
+
+  <button type="button" class="btn big purple" onclick="gerarDespacho()">Gerar despacho completo</button>
+
+  <div class="card" id="outputCard" style="display:none;margin-top:18px;">
+    <h2>Despacho gerado</h2>
+    <textarea class="gen-text" id="outputText" readonly></textarea>
+    <button type="button" class="btn secondary" style="margin-top:10px;" onclick="copiarTexto()">Copiar texto</button>
+    <span id="copiedMsg" style="display:none;margin-left:10px;font-size:12.5px;color:var(--green);">Copiado!</span>
+  </div>
+
+  <footer>
+    Ferramenta de apoio — a conclusão sobre prescrição deve sempre ser conferida por quem assina o despacho. Não considera causas de suspensão (art. 116, CP), concurso de crimes (art. 119) nem regras especiais de execução penal.
+  </footer>
+</div>
+
+<script>
+  const TIPOS_EVT = {
+    denuncia: "Recebimento da denúncia/queixa (art. 117, I, CP)",
+    pronuncia: "Pronúncia (art. 117, II, CP)",
+    confirmatoria: "Decisão confirmatória da pronúncia (art. 117, III, CP)",
+    sentenca: "Publicação de sentença/acórdão condenatório recorrível (art. 117, IV, CP)",
+    cumprimento: "Início/continuação do cumprimento da pena (art. 117, V, CP)",
+    reincidencia: "Reincidência (art. 117, VI, CP)",
+  };
+  const REINICIA = { denuncia:true, pronuncia:true, confirmatoria:true, sentenca:true, cumprimento:false, reincidencia:true };
+
+  // ---- Análise de documento por IA ----
+  let inputMode = "texto";
+  let arquivoBase64 = null, arquivoMediaType = null, arquivoTipo = null;
+
+  document.querySelectorAll("#inputModeToggle button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("#inputModeToggle button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      inputMode = btn.dataset.value;
+      document.getElementById("blocoTexto").style.display = inputMode === "texto" ? "block" : "none";
+      document.getElementById("blocoArquivo").style.display = inputMode === "arquivo" ? "block" : "none";
+    });
+  });
+
+  function handleFileSelect(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      arquivoBase64 = reader.result.split(",")[1];
+      arquivoMediaType = file.type || (file.name.endsWith(".pdf") ? "application/pdf" : "image/png");
+      arquivoTipo = arquivoMediaType === "application/pdf" ? "document" : "image";
+      document.getElementById("filedrop").classList.add("has-file");
+      document.getElementById("filedropLabel").textContent = "Arquivo selecionado: " + file.name;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const CRIMES_COMUNS = [
+    {art:"art. 289 do Código Eleitoral (Lei 4.737/65)", nome:"Inscrição fraudulenta de eleitor", pena:5},
+    {art:"art. 290 do Código Eleitoral (Lei 4.737/65)", nome:"Induzir inscrição fraudulenta de eleitor", pena:2},
+    {art:"art. 291 do Código Eleitoral (Lei 4.737/65)", nome:"Inscrição fraudulenta efetuada por juiz", pena:5},
+    {art:"art. 297 do Código Eleitoral (Lei 4.737/65)", nome:"Impedir ou embaraçar o exercício do sufrágio", pena:0.5},
+    {art:"art. 298 do Código Eleitoral (Lei 4.737/65)", nome:"Prender ou deter eleitor, mesário, fiscal, delegado ou candidato", pena:4},
+    {art:"art. 299 do Código Eleitoral (Lei 4.737/65)", nome:"Corrupção eleitoral (compra de votos)", pena:4},
+    {art:"art. 300 do Código Eleitoral (Lei 4.737/65)", nome:"Servidor público coagir voto valendo-se da autoridade", pena:0.5},
+    {art:"art. 301 do Código Eleitoral (Lei 4.737/65)", nome:"Violência ou grave ameaça para coagir o voto", pena:4},
+    {art:"art. 302 do Código Eleitoral (Lei 4.737/65)", nome:"Concentração de eleitores no dia da eleição", pena:6},
+    {art:"art. 317 do Código Eleitoral (Lei 4.737/65)", nome:"Violar ou tentar violar o sigilo da urna", pena:5},
+    {art:"art. 323 do Código Eleitoral (Lei 4.737/65)", nome:"Divulgar fatos inverídicos (fake news eleitoral)", pena:1},
+    {art:"art. 324 do Código Eleitoral (Lei 4.737/65)", nome:"Calúnia eleitoral", pena:2},
+    {art:"art. 326 do Código Eleitoral (Lei 4.737/65)", nome:"Injúria eleitoral", pena:0.5},
+    {art:"art. 354-A do Código Eleitoral (Lei 4.737/65)", nome:"Apropriação indébita de recursos de campanha", pena:6},
+    {art:"art. 39, §5º, da Lei 9.504/97", nome:"Boca de urna", pena:4},
+  ];
+
+  (function popularCrimeSelect(){
+    const sel = document.getElementById("crimeSelect");
+    CRIMES_COMUNS.forEach((c, i)=>{
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `${c.art} — ${c.nome} (pena máx: ${c.pena} ${c.pena===1?"ano":"anos"})`;
+      sel.appendChild(opt);
+    });
+  })();
+
+  function aplicarCrimeSelecionado(){
+    const idx = document.getElementById("crimeSelect").value;
+    if(idx === "") return;
+    const c = CRIMES_COMUNS[idx];
+    document.getElementById("dispositivo").value = c.art;
+    document.getElementById("penaMaxima").value = c.pena;
+  }
+
+  const CAMPOS_LABEL = {
+    numProcesso: "Número do processo",
+    zonaEleitoral: "Zona eleitoral",
+    dispositivoLegal: "Dispositivo legal",
+    penaMaximaAnos: "Pena máxima (anos)",
+    dataFato: "Data dos fatos",
+  };
+
+  let ultimaExtracao = null;
+
+  async function analisarDocumento(){
+    const spinner = document.getElementById("spinner");
+    spinner.classList.add("show");
+    document.getElementById("reviewPanel").classList.remove("show");
+
+    const promptTexto = `Você é um assistente jurídico que extrai dados estruturados de documentos processuais eleitorais/criminais brasileiros. Leia o documento fornecido e responda APENAS com um JSON válido (sem markdown, sem texto antes ou depois), no seguinte formato exato:
+
+{
+  "numProcesso": string ou null,
+  "zonaEleitoral": string ou null,
+  "dispositivoLegal": string ou null (ex: "art. 299 da Lei nº 4.737/1965"),
+  "penaMaximaAnos": number ou null (pena máxima cominada, em anos, use decimal para meses),
+  "dataFato": "AAAA-MM-DD" ou null,
+  "eventosInterruptivos": [{"tipo": "denuncia"|"pronuncia"|"confirmatoria"|"sentenca"|"cumprimento"|"reincidencia", "data": "AAAA-MM-DD", "descricao": string}],
+  "posicaoAssistido": {
+    "papel": string (ex: "réu"),
+    "situacaoAtual": string (resumo curto do que aconteceu no processo),
+    "avaliacao": "favoravel"|"desfavoravel"|"neutra"|"indefinida",
+    "justificativa": string (explique o raciocínio em até 3 frases)
+  },
+  "observacoes": string ou null (qualquer informação relevante que não coube nos campos acima)
+}
+
+Se algum dado não estiver no documento, use null. Não invente informação. Seja conservador na avaliação de "posicaoAssistido" — se não houver elementos suficientes, use "indefinida".`;
+
+    const content = [];
+    if(inputMode === "texto"){
+      const txt = document.getElementById("docTexto").value.trim();
+      if(!txt){ alert("Cole o texto do documento antes de analisar."); spinner.classList.remove("show"); return; }
+      content.push({type:"text", text: promptTexto + "\n\nDocumento:\n\n" + txt});
+    } else {
+      if(!arquivoBase64){ alert("Selecione um arquivo antes de analisar."); spinner.classList.remove("show"); return; }
+      if(arquivoTipo === "document"){
+        content.push({type:"document", source:{type:"base64", media_type:"application/pdf", data:arquivoBase64}});
+      } else {
+        content.push({type:"image", source:{type:"base64", media_type:arquivoMediaType, data:arquivoBase64}});
+      }
+      content.push({type:"text", text: promptTexto});
+    }
+
+    try{
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-6",
+          max_tokens:1000,
+          messages:[{role:"user", content}]
+        })
+      });
+      const data = await response.json();
+      const textBlocks = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+      const clean = textBlocks.replace(/```json|```/g,"").trim();
+      const extraido = JSON.parse(clean);
+      ultimaExtracao = extraido;
+      renderReview(extraido);
+    } catch(err){
+      console.error(err);
+      alert("Não foi possível analisar o documento. Tente novamente ou cole o texto diretamente.");
+    } finally {
+      spinner.classList.remove("show");
+    }
+  }
+
+  function renderReview(ex){
+    const container = document.getElementById("reviewFields");
+    container.innerHTML = "";
+
+    Object.keys(CAMPOS_LABEL).forEach(key=>{
+      if(ex[key] === undefined || ex[key] === null || ex[key] === "") return;
+      const row = document.createElement("div");
+      row.className = "review-item";
+      const inputType = key === "dataFato" ? "date" : (key === "penaMaximaAnos" ? "number" : "text");
+      row.innerHTML = `
+        <input type="checkbox" checked data-key="${key}" class="review-check">
+        <div class="rfield">
+          <div class="rlabel">${CAMPOS_LABEL[key]}</div>
+          <input type="${inputType}" ${inputType==="number"?'step="0.1"':""} value="${ex[key]}" data-key="${key}" class="review-value">
+        </div>`;
+      container.appendChild(row);
+    });
+
+    if(ex.eventosInterruptivos && ex.eventosInterruptivos.length){
+      ex.eventosInterruptivos.forEach((ev, i)=>{
+        const row = document.createElement("div");
+        row.className = "review-item";
+        row.innerHTML = `
+          <input type="checkbox" checked data-evt-idx="${i}" class="review-check-evt">
+          <div class="rfield">
+            <div class="rlabel">Evento interruptivo — ${TIPOS_EVT[ev.tipo] ? TIPOS_EVT[ev.tipo].split(" (")[0] : ev.tipo}</div>
+            <div style="font-size:13px;">${formatarDataCurta(parseDate(ev.data))} — ${ev.descricao||""}</div>
+          </div>`;
+        container.appendChild(row);
+      });
+    }
+
+    const posContainer = document.getElementById("posicaoContainer");
+    posContainer.innerHTML = "";
+    if(ex.posicaoAssistido){
+      const p = ex.posicaoAssistido;
+      const box = document.createElement("div");
+      box.className = "posicao-box";
+      box.innerHTML = `
+        <span class="tag ${p.avaliacao}">${(p.avaliacao||"indefinida").toUpperCase()}</span>
+        <p><b>Papel:</b> ${p.papel||"—"}</p>
+        <p style="margin-top:6px;"><b>Situação atual:</b> ${p.situacaoAtual||"—"}</p>
+        <p style="margin-top:6px;"><b>Justificativa da IA:</b> ${p.justificativa||"—"}</p>
+        <div class="posicao-warn">⚠ Sugestão da IA — não é aplicada automaticamente a nenhum campo. Confirme antes de usar na análise processual do despacho.</div>
+      `;
+      posContainer.appendChild(box);
+    }
+    if(ex.observacoes){
+      const obs = document.createElement("p");
+      obs.className = "hint";
+      obs.style.marginTop = "10px";
+      obs.textContent = "Observações da IA: " + ex.observacoes;
+      posContainer.appendChild(obs);
+    }
+
+    document.getElementById("reviewPanel").classList.add("show");
+  }
+
+  function aplicarCampos(){
+    document.querySelectorAll(".review-check").forEach(chk=>{
+      if(chk.checked){
+        const key = chk.dataset.key;
+        const valueInput = document.querySelector(`.review-value[data-key="${key}"]`);
+        const val = valueInput.value;
+        if(key === "numProcesso") document.getElementById("numProcesso").value = val;
+        if(key === "zonaEleitoral") document.getElementById("zonaEleitoral").value = val;
+        if(key === "dispositivoLegal") document.getElementById("dispositivo").value = val;
+        if(key === "penaMaximaAnos") document.getElementById("penaMaxima").value = val;
+        if(key === "dataFato") document.getElementById("dataFato").value = val;
+      }
+    });
+    document.querySelectorAll(".review-check-evt").forEach(chk=>{
+      if(chk.checked && ultimaExtracao && ultimaExtracao.eventosInterruptivos){
+        const idx = parseInt(chk.dataset.evtIdx, 10);
+        const ev = ultimaExtracao.eventosInterruptivos[idx];
+        if(ev && ev.tipo && ev.data){
+          eventos.push({tipo: ev.tipo, data: parseDate(ev.data)});
+        }
+      }
+    });
+    eventos.sort((a,b)=>a.data-b.data);
+    renderEventos();
+    alert("Campos aplicados. Role para baixo para conferir e calcular a prescrição.");
+  }
+
+  let eventos = [];
+
+  function parseDate(str){
+    if(!str) return null;
+    const [a,m,d] = str.split("-").map(Number);
+    return new Date(a, m-1, d);
+  }
+  function formatarData(d){
+    const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+    return `${String(d.getDate()).padStart(2,"0")} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+  function formatarDataCurta(d){
+    return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+  }
+  function addMeses(data, n){
+    return new Date(data.getFullYear(), data.getMonth()+n, data.getDate());
+  }
+
+  function adicionarEvento(){
+    const tipo = document.getElementById("evtTipo").value;
+    const dataStr = document.getElementById("evtData").value;
+    if(!dataStr){ alert("Escolha uma data para o evento."); return; }
+    eventos.push({tipo, data: parseDate(dataStr)});
+    eventos.sort((a,b)=>a.data-b.data);
+    renderEventos();
+    document.getElementById("evtData").value = "";
+  }
+  function removerEvento(idx){
+    eventos.splice(idx,1);
+    renderEventos();
+  }
+  function renderEventos(){
+    const list = document.getElementById("evtList");
+    const empty = document.getElementById("evtEmpty");
+    list.innerHTML = "";
+    if(eventos.length === 0){
+      list.appendChild(empty);
+      return;
+    }
+    eventos.forEach((ev, idx)=>{
+      const row = document.createElement("div");
+      row.className = "evt-item";
+      row.innerHTML = `<span class="tag">${TIPOS_EVT[ev.tipo].split(" (")[0]}</span><span class="dt">${formatarDataCurta(ev.data)}</span><button class="rm" onclick="removerEvento(${idx})">remover</button>`;
+      list.appendChild(row);
+    });
+  }
+
+  function art109(penaMax){
+    if(penaMax > 12) return 20;
+    if(penaMax > 8) return 16;
+    if(penaMax > 4) return 12;
+    if(penaMax > 2) return 8;
+    if(penaMax >= 1) return 4;
+    return 3;
+  }
+
+  let ultimoCalculo = null;
+
+  function calcularPrescricao(){
+    const penaMaxima = parseFloat(document.getElementById("penaMaxima").value);
+    const dataFatoStr = document.getElementById("dataFato").value;
+    if(!penaMaxima || !dataFatoStr){
+      alert("Preencha a pena máxima e a data dos fatos.");
+      return;
+    }
+    const menor21 = document.getElementById("menor21").checked;
+    const maior70 = document.getElementById("maior70").checked;
+    const dataFato = parseDate(dataFatoStr);
+
+    const prazoBase = art109(penaMaxima);
+    const reducao = menor21 || maior70;
+    const prazoFinal = reducao ? prazoBase/2 : prazoBase;
+    const mesesPrazo = Math.round(prazoFinal*12);
+
+    // monta linha do tempo: fato -> eventos que reiniciam (em ordem) -> hoje
+    const marcos = [{label:"Data dos fatos", data:dataFato, tipo:"fato"}];
+    eventos.forEach(ev=>{
+      if(REINICIA[ev.tipo]){
+        marcos.push({label:TIPOS_EVT[ev.tipo], data:ev.data, tipo:ev.tipo});
+      }
+    });
+    marcos.push({label:"Data atual (hoje)", data:new Date(), tipo:"hoje"});
+
+    const checks = [];
+    let prescritoEm = null;
+    for(let i=0;i<marcos.length-1;i++){
+      const a = marcos[i], b = marcos[i+1];
+      const limite = addMeses(a.data, mesesPrazo);
+      const prescreveu = b.data > limite;
+      checks.push({de:a, ate:b, limite, prescreveu});
+      if(prescreveu && !prescritoEm){
+        prescritoEm = limite;
+      }
+    }
+
+    ultimoCalculo = {penaMaxima, prazoBase, reducao, prazoFinal, marcos, checks, prescritoEm};
+
+    document.getElementById("prazoBaseVal").textContent = prazoBase + " anos";
+    document.getElementById("reducaoVal").textContent = reducao ? "Sim (art. 115)" : "Não";
+    document.getElementById("prazoFinalVal").textContent = prazoFinal + " anos";
+
+    const tlDiv = document.getElementById("timelineChecks");
+    tlDiv.innerHTML = "";
+    checks.forEach(c=>{
+      const div = document.createElement("div");
+      div.className = "timeline-check " + (c.prescreveu ? "bad" : "ok");
+      div.innerHTML = `<div class="tt">${c.prescreveu ? "⚠ Prescrito neste intervalo" : "✓ Dentro do prazo"}</div>
+        De: ${formatarData(c.de.data)} (${c.de.label}) → Até: ${formatarData(c.ate.data)} (${c.ate.label})<br>
+        Limite prescricional: ${formatarData(c.limite)}`;
+      tlDiv.appendChild(div);
+    });
+
+    document.getElementById("prescResult").classList.add("show");
+  }
+
+  function montarTextoPrescricao(){
+    if(!ultimoCalculo){
+      calcularPrescricao();
+      if(!ultimoCalculo) return null;
+    }
+    const c = ultimoCalculo;
+    const dispositivo = document.getElementById("dispositivo").value || "[dispositivo legal]";
+    let n = 3;
+    const linhas = [];
+
+    linhas.push(`${n}. A denúncia imputa à parte assistida, em tese, a prática do delito previsto no ${dispositivo}, cuja pena máxima cominada é de ${c.penaMaxima} ${c.penaMaxima===1?"ano":"anos"} de reclusão, além de multa.`);
+    n++;
+
+    let itemMarcos = `${n}. Certifico, para fins de análise prescricional, os seguintes marcos relevantes:\n`;
+    const letras = "abcdefghij";
+    c.marcos.forEach((m,i)=>{
+      if(m.tipo === "hoje") return;
+      itemMarcos += `${letras[i]}) ${m.label}: ${formatarData(m.data)};\n`;
+    });
+    linhas.push(itemMarcos.trim());
+    n++;
+
+    linhas.push(`${n}. Considerando que a pena máxima abstratamente cominada ao delito é de ${c.penaMaxima} ${c.penaMaxima===1?"ano":"anos"}, aplica-se, em tese, o prazo prescricional de ${c.prazoBase} (${c.prazoBase===1?"um ano":c.prazoBase+" anos"}), nos termos do art. 109 do Código Penal.`);
+    n++;
+
+    if(c.reducao){
+      linhas.push(`${n}. Verifica-se a incidência de causa de redução do prazo prescricional pela metade, nos termos do art. 115 do Código Penal, resultando em prazo prescricional de ${c.prazoFinal} anos.`);
+    } else {
+      linhas.push(`${n}. A princípio, não há nos autos elementos que indiquem a incidência das causas de redução do prazo prescricional previstas no art. 115 do Código Penal.`);
+    }
+    n++;
+
+    if(c.prescritoEm){
+      linhas.push(`${n}. Da análise da linha do tempo processual, verifica-se que o prazo prescricional de ${c.prazoFinal} anos se esgotou em ${formatarData(c.prescritoEm)}, havendo, em tese, elementos que evidenciam a ocorrência da prescrição da pretensão punitiva estatal. Recomenda-se análise imediata pela Assessoria Jurídica para confirmação e eventual arguição.`);
+    } else {
+      linhas.push(`${n}. Assim, entre os marcos acima certificados e a presente data, não há elementos que evidenciem a ocorrência da prescrição da pretensão punitiva estatal.`);
+    }
+    n++;
+
+    return {texto: linhas.join("\n\n"), proximoItem:n};
+  }
+
+  function gerarDespacho(){
+    const resolucao = document.getElementById("resolucao").value || "[resolução]";
+    const numProcesso = document.getElementById("numProcesso").value || "[número do processo]";
+    const zonaEleitoral = document.getElementById("zonaEleitoral").value || "[zona eleitoral]";
+    const semCobertura = document.getElementById("semCobertura").checked;
+
+    const partes = [];
+    partes.push("DIVISÃO CRIMINAL ELEITORAL\n");
+    partes.push(`1 - PAJ recebido para atuação nos termos da ${resolucao}.`);
+
+    let item2 = `2 - Tramita em desfavor da parte assistida a Ação Penal Eleitoral nº ${numProcesso}, perante ${zonaEleitoral}.`;
+    if(semCobertura){
+      item2 += ` Trata-se de localidade sem cobertura ordinária por Unidade ou Núcleo Regional da Defensoria Pública da União, razão pela qual a atuação compete ao Núcleo Estratégico de Interiorização Eleitoral – NEIE.`;
+    }
+    partes.push(item2);
+
+    partes.push("\nDA IMPUTAÇÃO E DOS MARCOS PRESCRICIONAIS\n");
+    const presc = montarTextoPrescricao();
+    let proximoItem = 8;
+    if(presc){
+      partes.push(presc.texto);
+      proximoItem = presc.proximoItem;
+    }
+
+    partes.push("\nDA ANÁLISE PROCESSUAL\n");
+    const analiseRaw = document.getElementById("analiseProcessual").value.trim();
+    if(analiseRaw){
+      const paragrafos = analiseRaw.split(/\n\s*\n/).filter(p=>p.trim());
+      paragrafos.forEach(p=>{
+        partes.push(`${proximoItem} - ${p.trim()}`);
+        proximoItem++;
+      });
+    } else {
+      partes.push(`${proximoItem} - [preencher análise processual]`);
+      proximoItem++;
+    }
+
+    partes.push("\nDILIGÊNCIAS CARTORÁRIAS\n");
+    let dilCartorio = [];
+    if(document.getElementById("dilAssistido").checked){
+      dilCartorio.push(semCobertura
+        ? "Entrar em contato com a parte assistida para cientificá-la de que a Defensoria Pública da União assumiu sua defesa perante a Justiça Eleitoral, em razão da competência atribuída ao Núcleo Estratégico de Interiorização Eleitoral – NEIE;"
+        : "Entrar em contato com a parte assistida para cientificá-la de que a Defensoria Pública da União assumiu sua defesa perante a Justiça Eleitoral;");
+    }
+    if(document.getElementById("dilTestemunhas").checked){
+      dilCartorio.push("Indagar acerca da existência de testemunhas que possam contribuir para o esclarecimento dos fatos, encaminhando nome completo, telefone, endereço e demais dados de qualificação.");
+    }
+    const dilExtra = document.getElementById("dilExtra").value.trim();
+    if(dilExtra){
+      dilExtra.split("\n").filter(l=>l.trim()).forEach(l=>dilCartorio.push(l.trim().replace(/[.;]?$/,";")));
+    }
+    if(dilCartorio.length){
+      let cartorioTexto = `${proximoItem} - Ao Cartório:\n`;
+      const letras = "abcdefghij";
+      dilCartorio.forEach((d,i)=>{ cartorioTexto += `${letras[i]}) ${d}\n`; });
+      partes.push(cartorioTexto.trim());
+      proximoItem++;
+    }
+
+    partes.push("\nDILIGÊNCIAS DA ASSESSORIA JURÍDICA\n");
+    const assessoriaRaw = document.getElementById("dilAssessoria").value.trim();
+    if(assessoriaRaw){
+      assessoriaRaw.split("\n").filter(l=>l.trim()).forEach(l=>{
+        partes.push(`${proximoItem} - ${l.trim()}`);
+        proximoItem++;
+      });
+    } else {
+      partes.push(`${proximoItem} - [preencher diligências da assessoria]`);
+      proximoItem++;
+    }
+
+    const textoFinal = partes.join("\n\n");
+    document.getElementById("outputText").value = textoFinal;
+    document.getElementById("outputCard").style.display = "block";
+    document.getElementById("outputCard").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function copiarTexto(){
+    const ta = document.getElementById("outputText");
+    ta.select();
+    document.execCommand("copy");
+    const msg = document.getElementById("copiedMsg");
+    msg.style.display = "inline";
+    setTimeout(()=>{ msg.style.display = "none"; }, 2000);
+  }
+</script>
+</body>
+</html>
